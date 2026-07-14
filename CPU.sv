@@ -1,4 +1,4 @@
-module CPU(input clk, input rst);
+module CPU(input logic clk, input logic rst);
 
   reg[1:0] IR;
   reg[5:0] PC, AR;
