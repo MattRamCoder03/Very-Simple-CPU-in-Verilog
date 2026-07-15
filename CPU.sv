@@ -9,9 +9,9 @@ module top_module ();
 	reg start=1;
     reg rst =1;
 	initial begin
-        #12 rst<=0;
+        #12 rst <=0;
 		$display ("Hello world! The current time is (%0d ps)", $time);
-		#50 $finish;            // Quit the simulation
+		#70 $finish;            // Quit the simulation
 	end
     
     CPU test1(.clk(clk), .start(start), .rst(rst));
@@ -29,7 +29,7 @@ module CPU(input logic clk, input logic start, input logic rst);
   logic[7:0] next_DR, next_AC;
 
 reg [3:0] state, next_state;
-parameter IDLE=4'd0, FETCH1=4'd1, FETCH2=4'd2, FETCH3=4'd3, ADD1=4'd4, ADD2=4'd5;
+parameter IDLE=4'd0, FETCH1=4'd1, FETCH2=4'd2, FETCH3=4'd3, ADD1=4'd4, ADD2=4'd5, AND1=4'd6, AND2=4'd7;
 // AND1=4'd6, AND2=4'd7, JMP=4'd8, INC=4'd9;
 
   //always block for state transitions, ctrl signals are input 
@@ -39,7 +39,8 @@ parameter IDLE=4'd0, FETCH1=4'd1, FETCH2=4'd2, FETCH3=4'd3, ADD1=4'd4, ADD2=4'd5
 //reset logic
     
   initial begin
-    MEM = 8'd2;
+    MEM = 8'b01000000;
+    IR = 2'd0;
 end
     
   always@(posedge clk) begin 
@@ -72,6 +73,9 @@ always@(*) begin
     if (IR==2'b00) begin
         next_state = ADD1;
       end 
+        else if (IR==2'b01) begin 
+      next_state=AND1;
+    end 
       else begin 
         next_state = IDLE;
       end 
@@ -80,6 +84,12 @@ always@(*) begin
       next_state = ADD2;
     end
     ADD2: begin 
+      next_state = IDLE;
+    end 
+    AND1: begin 
+      next_state = AND2;
+    end 
+    AND2: begin 
       next_state = IDLE;
     end 
     default: next_state = IDLE;
@@ -111,11 +121,27 @@ always@(*) begin
       next_AC = AC;
     end 
     FETCH3: begin       
+    if (IR==2'b00) begin 
       next_AR = AR;
       next_DR = MEM;
       next_PC = PC;
       next_IR = IR;
       next_AC = AC;
+      end 
+      else if (IR==2'b01) begin 
+      next_AR = AR;
+      next_DR = MEM;
+      next_PC = PC;
+      next_IR = IR;
+      next_AC = AC;
+      end 
+      else begin 
+      next_AR = AR;
+      next_DR = DR;
+      next_PC = PC;
+      next_IR = IR;
+      next_AC = AC;
+      end 
     end 
     ADD1: begin       
       next_AR = AR;
@@ -125,6 +151,27 @@ always@(*) begin
       next_AC = AC+DR;
     end 
     ADD2: begin 
+      next_AR = AR;
+      next_DR = DR;
+      next_PC = PC;
+      next_IR = IR;
+      next_AC = AC;
+    end 
+    AND1: begin 
+      next_AR = AR;
+      next_DR = DR;
+      next_PC = PC;
+      next_IR = IR;
+      next_AC = AC && DR;
+    end 
+    AND2: begin 
+      next_AR = AR;
+      next_DR = DR;
+      next_PC = PC;
+      next_IR = IR;
+      next_AC = AC;
+    end 
+    default: begin
       next_AR = AR;
       next_DR = DR;
       next_PC = PC;
@@ -141,7 +188,7 @@ always@(posedge clk) begin
         DR<=8'd0;
         PC<=6'd0;
         IR<=2'd0;
-        AC<=8'd0;
+        AC<=8'd10;
   end 
   else begin
     AR<=next_AR;
