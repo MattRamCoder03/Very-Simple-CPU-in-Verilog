@@ -2,8 +2,7 @@ module CPU(input logic clk, input logic start, input logic rst);
 
   reg[1:0] IR;
   reg[5:0] PC, AR;
-  reg[7:0] DR, AC;
-  reg[7:0] memory [0:3];
+  reg[7:0] DR, AC, MEM;
 
   wire[1:0] next_IR;
   wire[5:0] next_PC, next_AR;
@@ -45,7 +44,12 @@ always_comb begin
       next_state = FETCH3;
     end
     FETCH3: begin 
-      next_state = ADD1;
+    if (IR==2'b00) begin
+        next_state = ADD1;
+      end 
+      else begin 
+        next_state = IDLE;
+      end 
     end
     ADD1: begin 
       next_state = ADD2;
@@ -61,7 +65,7 @@ end
 always_comb begin 
   case(state) 
     IDLE: begin 
-      next_AR = 6'd0;
+      next_AR = PC;
       next_DR = 8'd0;
       next_PC = 6'd0;
       next_IR = 2'd0;
@@ -69,21 +73,21 @@ always_comb begin
     end 
     FETCH1: begin 
       next_AR = 6'd0;
-      next_DR = 8'd0;
-      next_PC = 6'd0;
+      next_DR = MEM;
+      next_PC = PC+1;
       next_IR = 2'd0;
       next_AC = 8'd0;
     end 
     FETCH2: begin
-      next_AR = 6'd0;
+      next_AR = DR[5:0];
       next_DR = 8'd0;
       next_PC = 6'd0;
-      next_IR = 2'd0;
+      next_IR = DR[7:6];
       next_AC = 8'd0;
     end 
     FETCH3: begin       
       next_AR = 6'd0;
-      next_DR = 8'd0;
+      next_DR = MEM;
       next_PC = 6'd0;
       next_IR = 2'd0;
       next_AC = 8'd0;
@@ -93,7 +97,7 @@ always_comb begin
       next_DR = 8'd0;
       next_PC = 6'd0;
       next_IR = 2'd0;
-      next_AC = 8'd0;
+      next_AC = AC+DR;
     end 
     ADD2: begin 
       next_AR = 6'd0;
