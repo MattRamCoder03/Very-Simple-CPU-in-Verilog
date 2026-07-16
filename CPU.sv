@@ -29,17 +29,10 @@ module CPU(input logic clk, input logic start, input logic rst);
   logic[7:0] next_DR, next_AC;
 
 reg [3:0] state, next_state;
-parameter IDLE=4'd0, FETCH1=4'd1, FETCH2=4'd2, FETCH3=4'd3, ADD1=4'd4, ADD2=4'd5, AND1=4'd6, AND2=4'd7;
-// AND1=4'd6, AND2=4'd7, JMP=4'd8, INC=4'd9;
-
-  //always block for state transitions, ctrl signals are input 
-
-  //always block for sequential and reset
-
-//reset logic
+parameter IDLE=4'd0, FETCH1=4'd1, FETCH2=4'd2, FETCH3=4'd3, ADD1=4'd4, ADD2=4'd5, AND1=4'd6, AND2=4'd7, JMP=4'd8, INC=4'd9;
     
   initial begin
-    MEM = 8'b01000000;
+    MEM = 8'b11000011;
     IR = 2'd0;
 end
     
@@ -76,9 +69,15 @@ always@(*) begin
         else if (IR==2'b01) begin 
       next_state=AND1;
     end 
+        else if (IR==2'b10) begin 
+      next_state=JMP;
+    end 
+        else if (IR==2'b11) begin
+      next_state = INC;
+    end 
       else begin 
         next_state = IDLE;
-      end 
+    end 
     end
     ADD1: begin 
       next_state = ADD2;
@@ -92,91 +91,65 @@ always@(*) begin
     AND2: begin 
       next_state = IDLE;
     end 
+    JMP: begin 
+        next_state = IDLE;
+    end 
+    INC: begin 
+        next_state = IDLE;
+    end 
     default: next_state = IDLE;
   endcase
 end 
 
-//combinational logic for next outputs 
+    //combinational logic for next outputs (control unit)
 always@(*) begin 
+      next_AR = AR;
+      next_DR = DR;
+      next_PC = PC;
+      next_IR = IR;
+      next_AC = AC;
   case(state) 
     IDLE: begin 
       next_AR = PC;
-      next_DR = DR;
-      next_PC = PC;
-      next_IR = IR;
-      next_AC = AC;
     end 
     FETCH1: begin 
-      next_AR = AR;
       next_DR = MEM;
       next_PC = PC+1;
-      next_IR = IR;
-      next_AC = AC;
     end 
     FETCH2: begin
       next_AR = {DR[5:0]};
-      next_DR = DR;
-      next_PC = PC;
       next_IR = DR[7:6];
-      next_AC = AC;
     end 
     FETCH3: begin       
     if (IR==2'b00) begin 
-      next_AR = AR;
-      next_DR = MEM;
-      next_PC = PC;
-      next_IR = IR;
-      next_AC = AC;
+      	next_DR = MEM;
       end 
       else if (IR==2'b01) begin 
-      next_AR = AR;
-      next_DR = MEM;
-      next_PC = PC;
-      next_IR = IR;
-      next_AC = AC;
+      	next_DR = MEM;
       end 
-      else begin 
-      next_AR = AR;
-      next_DR = DR;
-      next_PC = PC;
-      next_IR = IR;
-      next_AC = AC;
+        else if (IR==2'b10) begin 
+        next_PC = DR[5:0];
+      end 
+        else if (IR==2'b11) begin 
+        next_AC = AC+1;
       end 
     end 
     ADD1: begin       
-      next_AR = AR;
-      next_DR = DR;
-      next_PC = PC;
-      next_IR = IR;
       next_AC = AC+DR;
     end 
     ADD2: begin 
-      next_AR = AR;
-      next_DR = DR;
-      next_PC = PC;
-      next_IR = IR;
-      next_AC = AC;
+        //
     end 
     AND1: begin 
-      next_AR = AR;
-      next_DR = DR;
-      next_PC = PC;
-      next_IR = IR;
       next_AC = AC && DR;
     end 
     AND2: begin 
-      next_AR = AR;
-      next_DR = DR;
-      next_PC = PC;
-      next_IR = IR;
-      next_AC = AC;
+        //
     end 
-    default: begin
-      next_AR = AR;
-      next_DR = DR;
-      next_PC = PC;
-      next_IR = IR;
-      next_AC = AC;
+    JMP: begin 
+        //
+    end 
+    INC: begin 
     end 
   endcase
 end 
@@ -188,7 +161,7 @@ always@(posedge clk) begin
         DR<=8'd0;
         PC<=6'd0;
         IR<=2'd0;
-        AC<=8'd10;
+        AC<=8'd1;
   end 
   else begin
     AR<=next_AR;
