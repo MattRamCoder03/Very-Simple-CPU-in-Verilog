@@ -4,9 +4,12 @@ output logic[1:0] next_IR,
 output_logic[5:0] next_PC, next_AR,
 output logic[7:0] next_DR, next_AC);
 
-
+logic arload, pcload, pcinc, drload, acload, acinc, irload, alusel, membus, pcbus, drbus, read;
+logic ctrl_sig[11:0] ={arload,pcload,pcinc,drload,acload,acinc,irload,alusel,membus,pcbus,drbus,read};
+//assign each signal to a bit in the wire 
+    
 //state machine for always
-    //combinational logic for next outputs (control unit)
+//combinational logic for next outputs (control unit)
 always@(*) begin 
       next_AR = AR;
       next_DR = DR;
